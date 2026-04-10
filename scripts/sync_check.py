@@ -161,20 +161,31 @@ def sync_check(
                 }
             )
 
+    # Known language codes and translation dir names to skip
+    skip_dirs = {
+        ".git", "node_modules", ".venv", "__pycache__",
+        "translations", "i18n", "l10n", "lang", "locales",
+        translations_dir.name,
+    }
+    # Also detect language code directories (uk/, vi/, zh/, etc.)
+    try:
+        from scan import LANGUAGES
+        for item in repo_root.iterdir():
+            if item.is_dir() and item.name.lower() in LANGUAGES:
+                skip_dirs.add(item.name)
+    except ImportError:
+        # Fallback: skip 2-3 char dirs that contain .md files
+        for item in repo_root.iterdir():
+            if item.is_dir() and len(item.name) <= 3 and item.name.isalpha():
+                md_count = sum(1 for _ in item.rglob("*.md"))
+                if md_count > 3:  # Likely a language dir
+                    skip_dirs.add(item.name)
+
     # Find untranslated files
     for orig_path in sorted(repo_root.rglob("*.md")):
         rel = orig_path.relative_to(repo_root)
-        # Skip files in translations dir, .git, etc.
         parts = rel.parts
-        if any(
-            p in parts
-            for p in [
-                ".git",
-                "node_modules",
-                ".venv",
-                translations_dir.name,
-            ]
-        ):
+        if any(p in skip_dirs for p in parts):
             continue
 
         trans_path = lang_dir / rel
