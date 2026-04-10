@@ -20,15 +20,15 @@ repo-translator/
 │   └── glossary-uk.yaml     # Example glossary (Ukrainian)
 ├── templates/
 │   └── .gitkeep
+├── docs/
+│   └── failure-analysis.md  # 48 real problems analysis (English)
 ├── .repo-translator.yaml.example
 ├── .gitignore
 ├── CLAUDE.md                # THIS FILE
 ├── README.md                # User-facing documentation
-├── CONTRIBUTING.md           # Contribution guidelines
+├── CONTRIBUTING.md          # Contribution guidelines
 ├── SECURITY.md              # Security policy
 ├── CODE_OF_CONDUCT.md       # Community standards
-├── FAILURE-ANALYSIS.md      # 48 real problems analysis
-├── REPO-TRANSLATOR-SPEC.md  # Full specification
 └── LICENSE                  # MIT
 ```
 

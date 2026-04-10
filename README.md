@@ -1,5 +1,7 @@
 # repo-translator
 
+🌐 [English](README.md) | [Українська](translations/uk/README.md) | [Español](translations/es/README.md) | [Français](translations/fr/README.md) | [Deutsch](translations/de/README.md) | [Português](translations/pt-br/README.md) | [中文](translations/zh/README.md) | [日本語](translations/ja/README.md)
+
 **Universal tool for translating GitHub repository documentation into any language.**
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
@@ -8,7 +10,7 @@
 
 Not an API wrapper — a **framework** for structure, validation, and sync. Translate using any method: Claude Code, Claude.ai, ChatGPT, Ollama, or manually. The tool ensures the result is correct.
 
-> **Built from real experience**: Every feature exists because of a real problem encountered while translating [claude-howto](https://github.com/luongnv89/claude-howto) (22K+ ⭐) into Ukrainian. See [FAILURE-ANALYSIS.md](FAILURE-ANALYSIS.md) for the full 48-problem breakdown.
+> **Built from real experience**: Every feature exists because of a real problem encountered while translating [claude-howto](https://github.com/luongnv89/claude-howto) (22K+ ⭐) into Ukrainian. See [docs/failure-analysis.md](docs/failure-analysis.md) for the full 48-problem breakdown.
 
 ---
 
