@@ -50,8 +50,8 @@ Ferramentas existentes (co-op-translator, gpt-translate) lidam com a tradução,
 ```
 SCAN  →  TRANSLATE  →  VALIDATE  →  FIX  →  SYNC
   ↓         ↓            ↓          ↓        ↓
-"What     "Any        "Is it     "Auto-   "What's
- files?"   method"    correct?"   fix"    outdated?"
+"Quais    "Qualquer   "Está      "Auto-   "O que está
+ arquivos?" método"   correto?"  fix"    desatualizado?"
 ```
 
 1. **Escanear** — Analisar o repo, classificar arquivos (traduzir / copiar / pular), detectar traduções existentes, estimar esforço

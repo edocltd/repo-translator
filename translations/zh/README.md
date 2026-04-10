@@ -50,8 +50,8 @@
 ```
 SCAN  →  TRANSLATE  →  VALIDATE  →  FIX  →  SYNC
   ↓         ↓            ↓          ↓        ↓
-"What     "Any        "Is it     "Auto-   "What's
- files?"   method"    correct?"   fix"    outdated?"
+"哪些      "任何       "是否      "自动    "什么
+ 文件?"    方法"      正确?"    修复"  过时?"
 ```
 
 1. **扫描** — 分析仓库，分类文件（翻译/复制/跳过），自动检测现有翻译，估算工作量

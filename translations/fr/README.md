@@ -50,8 +50,8 @@ Les outils existants (co-op-translator, gpt-translate) gèrent la traduction mai
 ```
 SCAN  →  TRANSLATE  →  VALIDATE  →  FIX  →  SYNC
   ↓         ↓            ↓          ↓        ↓
-"What     "Any        "Is it     "Auto-   "What's
- files?"   method"    correct?"   fix"    outdated?"
+"Quels    "N'importe  "Est-ce    "Auto-   "Quoi
+ fichiers?" quelle"   correct?"  fix"    d'obsolète?"
 ```
 
 1. **Scan** — Analyser le dépôt, classifier les fichiers (traduire / copier / ignorer), détecter les traductions existantes, estimer l'effort

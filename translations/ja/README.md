@@ -50,8 +50,8 @@ APIラッパーではなく、構造化、検証、同期のための**フレー
 ```
 SCAN  →  TRANSLATE  →  VALIDATE  →  FIX  →  SYNC
   ↓         ↓            ↓          ↓        ↓
-"What     "Any        "Is it     "Auto-   "What's
- files?"   method"    correct?"   fix"    outdated?"
+"どの      "任意の     "正しい     "自動    "何が
+ ファイル?"  方法"     か?"      修正"  古い?"
 ```
 
 1. **スキャン** — リポジトリを分析し、ファイルを分類（翻訳/コピー/スキップ）、既存の翻訳を自動検出、作業量を見積もり
