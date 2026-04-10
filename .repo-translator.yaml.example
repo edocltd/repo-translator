@@ -1,0 +1,38 @@
+# .repo-translator.yaml
+# Place this file in the root of the repository you want to translate.
+# All settings are optional — defaults work for most repositories.
+
+# Source language (default: en)
+source_lang: en
+
+# Where to store translations (default: translations)
+translations_dir: translations
+
+# What to translate (default: all .md files)
+include:
+  - "**/*.md"
+  - "**/*.mdx"
+
+# What to skip (default: common non-content directories)
+exclude:
+  - ".git/**"
+  - "node_modules/**"
+  - ".venv/**"
+  - "__pycache__/**"
+  - "CHANGELOG.md"
+  - "**/LICENSE"
+  - "**/LICENSE.md"
+
+# Files to copy without translation (overrides include)
+# copy:
+#   - "RELEASE_NOTES.md"
+#   - "prompts/**/*.md"
+
+# Translation method (default: manual)
+# Options: manual, claude-code, paste, api, ollama
+# translation_method: manual
+
+# AI settings (only for api method)
+# ai:
+#   provider: anthropic
+#   model: claude-sonnet-4-20250514

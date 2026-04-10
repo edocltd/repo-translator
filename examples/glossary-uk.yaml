@@ -1,0 +1,63 @@
+# Glossary for Ukrainian translation
+# Used by repo-translator to ensure consistent terminology
+
+language: uk
+language_name: Українська
+
+terms:
+  # Technical terms
+  hook: "хук"
+  hooks: "хуки"
+  plugin: "плагін"
+  plugins: "плагіни"
+  skill: "навичка"
+  skills: "навички"
+  subagent: "субагент"
+  checkpoint: "контрольна точка"
+  rewind: "відкат"
+  slash command: "слеш-команда"
+  workflow: "робочий процес"
+  deployment: "розгортання"
+  rollback: "відкат"
+
+  # Common sections
+  overview: "Огляд"
+  architecture: "Архітектура"
+  getting started: "Початок роботи"
+  quick start: "Швидкий старт"
+  installation: "Встановлення"
+  requirements: "Вимоги"
+  configuration: "Конфігурація"
+  usage: "Використання"
+  examples: "Приклади"
+  best practices: "Найкращі практики"
+  troubleshooting: "Усунення неполадок"
+  contributing: "Як долучитися"
+  code review: "код-рев'ю"
+  use case: "сценарій використання"
+  pull request: "pull request"
+
+do_not_translate:
+  - "Claude Code"
+  - "Claude"
+  - "Anthropic"
+  - "GitHub"
+  - "Mermaid"
+  - "MCP"
+  - "YAML"
+  - "JSON"
+  - "CLI"
+  - "API"
+  - "README"
+  - "CLAUDE.md"
+  - "SKILL.md"
+  - "PR"
+  - "CI/CD"
+  - "Docker"
+  - "npm"
+  - "pip"
+  - "git"
+  - "bash"
+  - "Python"
+  - "JavaScript"
+  - "TypeScript"
