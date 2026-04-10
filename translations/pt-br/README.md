@@ -13,7 +13,7 @@
 
 Não é um wrapper de API — é um **framework** para estrutura, validação e sincronização. Traduza usando qualquer método: Claude Code, Claude.ai, ChatGPT, Ollama ou manualmente. A ferramenta garante que o resultado esteja correto.
 
-> **Construído a partir de experiência real**: Cada funcionalidade existe por causa de um problema real encontrado ao traduzir [claude-howto](https://github.com/luongnv89/claude-howto) (22K+ ⭐) para ucraniano. Veja [FAILURE-ANALYSIS.md](../../FAILURE-ANALYSIS.md) para a análise completa de 48 problemas.
+> **Construído a partir de experiência real**: Cada funcionalidade existe por causa de um problema real encontrado ao traduzir [claude-howto](https://github.com/luongnv89/claude-howto) (22K+ ⭐) para ucraniano. Veja [FAILURE-ANALYSIS.md](../../docs/failure-analysis.md) para a análise completa de 48 problemas.
 
 ---
 
@@ -164,7 +164,7 @@ Apenas arquivos `.md` são traduzidos. Código, imagens e configurações perman
 
 ## Contribuir
 
-Contribuições são bem-vindas. Leia [CONTRIBUTING.md](../../CONTRIBUTING.md) antes de enviar PRs.
+Contribuições são bem-vindas. Leia [CONTRIBUTING.md](CONTRIBUTING.md) antes de enviar PRs.
 
 ## Licença
 
