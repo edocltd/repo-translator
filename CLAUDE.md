@@ -1,346 +1,184 @@
-# CLAUDE.md — repo-translator
+# CLAUDE.md
 
-> Це єдине джерело правди про проєкт. Перед будь-якою зміною — прочитай цей файл повністю.
+> Single source of truth for this project. Read this file completely before making any changes.
 
-## Що це
+## What This Project Is
 
-Універсальний інструмент для перекладу markdown-документації будь-якого GitHub-репозиторію на будь-яку мову. Не API-обгортка — фреймворк для структури, валідації та синхронізації. Сам переклад може бути виконаний будь-яким способом (Claude Code, copy-paste, Ollama, вручну, API).
+Universal tool for translating GitHub repository markdown documentation into any language. Not an API wrapper — a framework for structure, validation, and sync. Translation itself can be done by any method (Claude Code, copy-paste, Ollama, manually, API).
 
-## Поточна структура проєкту
+## Project Structure
 
 ```
 repo-translator/
 ├── scripts/
-│   ├── scan.py              # Сканування репо, класифікація файлів, генерація плану
-│   ├── validate.py          # Валідація перекладів (10 перевірок)
-│   ├── fix_anchors.py       # Автовиправлення якорів, кодування, invisible Unicode
-│   ├── prompt_generator.py  # Генерація промптів для copy-paste workflow
-│   └── sync_check.py        # Перевірка синхронізації з оригіналом
+│   ├── scan.py              # Scan repo, classify files, generate plan
+│   ├── validate.py          # Validate translations (12 checks)
+│   ├── fix_anchors.py       # Auto-fix anchors, encoding, invisible Unicode
+│   ├── prompt_generator.py  # Generate prompts for copy-paste workflow
+│   └── sync_check.py        # Check sync status with originals
 ├── examples/
-│   └── glossary-uk.yaml     # Приклад глосарію для української мови
+│   └── glossary-uk.yaml     # Example glossary (Ukrainian)
 ├── templates/
-│   └── .gitkeep             # Зарезервовано для майбутніх шаблонів промптів
-├── .repo-translator.yaml.example  # Приклад конфігурації
+│   └── .gitkeep
+├── .repo-translator.yaml.example
 ├── .gitignore
-├── README.md                # Документація для користувачів
-├── CLAUDE.md                # ЦЕЙ ФАЙЛ — документація для розробки
-├── FAILURE-ANALYSIS.md      # Аналіз 48 проблем з реального досвіду
-├── REPO-TRANSLATOR-SPEC.md  # Повна специфікація (початкова версія)
+├── CLAUDE.md                # THIS FILE
+├── README.md                # User-facing documentation
+├── CONTRIBUTING.md           # Contribution guidelines
+├── SECURITY.md              # Security policy
+├── CODE_OF_CONDUCT.md       # Community standards
+├── FAILURE-ANALYSIS.md      # 48 real problems analysis
+├── REPO-TRANSLATOR-SPEC.md  # Full specification
 └── LICENSE                  # MIT
 ```
 
-## Архітектура: 5-етапний конвеєр
+## Architecture
+
+Five-stage pipeline, each stage is an independent script:
 
 ```
 SCAN → TRANSLATE → VALIDATE → FIX → SYNC
 ```
 
-Кожен етап — окремий скрипт, незалежний від інших. Людина може запускати їх окремо.
-
-### Потік даних
+### Data Flow
 
 ```
-Репозиторій (будь-який)
+Repository (any)
     │
     ▼
-[scan.py] ──→ Виводить план: які файли перекладати, які пропустити
+[scan.py] → Plan: which files to translate/copy/skip
     │
     ▼
-[Людина/AI перекладає] ──→ Файли у translations/{lang}/
+[Human/AI translates] → Files in translations/{lang}/
     │
     ▼
-[validate.py] ──→ Перевіряє: рядки, код-блоки, якорі, кодування
+[validate.py] → Checks: lines, code blocks, anchors, encoding
     │
-    ├── Помилки? ──→ [fix_anchors.py] ──→ Автовиправлення
-    │
-    └── Все ОК? ──→ git commit
+    ├── Errors? → [fix_anchors.py] → Auto-fix
+    └── All OK? → git commit
     │
     ▼
-[sync_check.py] ──→ "Файл X застарів" (коли оригінал оновився)
+[sync_check.py] → "File X is outdated" (when original changes)
 ```
 
----
+## Scripts: Exact Behavior
 
-## Скрипти: детальний опис
+### scan.py
 
-### 1. scan.py — Сканування репозиторію
+**Purpose**: Analyze repository and classify every file.
 
-**Призначення**: Проаналізувати репозиторій і визначити що з кожним файлом робити.
+**Auto-detection**: Automatically finds and excludes existing translation directories:
+- Language code dirs: `uk/`, `vi/`, `zh/`, etc. (verified by checking for .md files inside)
+- Container dirs: `translations/`, `i18n/`, `l10n/`, `lang/`, `locales/`
 
-**Ключова поведінка**:
-- Сканує ТІЛЬКИ `.md` та `.mdx` файли (налаштовується через `include`)
-- **Автоматично детектує** існуючі переклади:
-  - Папки з кодами мов ISO 639-1 (`uk/`, `vi/`, `zh/`, `de/` тощо)
-  - Контейнерні папки (`translations/`, `i18n/`, `l10n/`, `lang/`, `locales/`)
-  - Перевіряє наявність .md файлів всередині (щоб не виключити папку `no/` яка не є перекладом)
-- **Автоматично виключає** знайдені перекладацькі папки зі сканування
-- Класифікує файли: `translate` / `copy` / `skip`
-- Оцінює кількість токенів та вартість API
+**Classification logic** (priority order):
+1. File in `SKIP_FILENAMES` (LICENSE, .gitignore) → skip
+2. Binary file (null bytes > 1%) → skip
+3. File in `COPY_FILENAMES` (CHANGELOG.md) → copy
+4. .md with < 10% prose (mostly code/config) → copy
+5. All other .md files → translate
 
-**CLI**:
-```
-python scripts/scan.py --root /path/to/repo --lang uk
-python scripts/scan.py --root /path/to/repo --lang uk --json
-python scripts/scan.py --root /path/to/repo --lang uk --output plan.json
-python scripts/scan.py --root /path/to/repo --lang uk --translations-dir translations
-python scripts/scan.py --root /path/to/repo --lang uk --max-files 1000
-```
+**Exclude pattern matching**: Uses `Path.match()` with fallback to `str.startswith()` for `**` patterns on Windows.
 
-**Параметри**:
-- `--root, -r` — корінь репо (default: `.`)
-- `--lang, -l` — код мови ISO 639-1 (обов'язковий)
-- `--translations-dir, -d` — папка для перекладів (default: `translations`)
-- `--max-files` — ліміт файлів (default: 500)
-- `--json` — вивід JSON замість таблиці
-- `--output, -o` — зберегти план у файл
+**CLI**: `python scripts/scan.py --root PATH --lang CODE [--translations-dir NAME] [--json] [--output FILE] [--max-files N]`
 
-**Логіка класифікації файлів**:
-1. Файл у `SKIP_FILENAMES` (LICENSE, .gitignore тощо) → skip
-2. Бінарний файл → skip
-3. Файл у `COPY_FILENAMES` (CHANGELOG.md) → copy
-4. .md файл з < 10% прози (переважно код) → copy
-5. Решта .md файлів → translate
+### validate.py
 
-**Логіка виключення патернів** (порядок):
-1. `Path.match(pattern)` — стандартний glob
-2. Fallback: `rel_str.startswith(prefix + "/")` — для `**` патернів на Windows
+**Purpose**: Check translation quality against original.
 
-**ВІДОМИЙ БАҐЄ**: `--translations-dir .` раніше ламав сканування (exclude `./**` = все). Тепер виправлено через `build_exclude_patterns()` який автоматично детектує мовні папки.
+**12 checks**: UTF-8, line count (±15%), code blocks count, unmatched fences, Mermaid count, heading count, table rows, code content preserved, anchor links resolve, URLs preserved, invisible Unicode, trailing newline.
 
----
+**Anchor generation**: GitHub-style — remove emoji, remove non-word chars (except Unicode letters), lowercase, spaces→hyphens. Supports duplicate heading numbering (-1, -2).
 
-### 2. validate.py — Валідація перекладів
+**Known issue**: Apostrophe variants (U+0027 vs U+02BC) produce different anchors. `find_best_anchor()` normalizes them for comparison.
 
-**Призначення**: Перевірити якість перекладеного файлу порівняно з оригіналом.
+**CLI**: `python scripts/validate.py --root PATH --lang CODE [--translations-dir NAME] [--file FILE] [--json]`
 
-**10 перевірок**:
+### fix_anchors.py
 
-| # | Перевірка | Severity | Автовиправлення |
-|---|-----------|----------|-----------------|
-| 1 | UTF-8 валідність | error | Ні (див. fix_anchors.py) |
-| 2 | Кількість рядків ±15% | error (<85%) / warning (<95%) | Ні |
-| 3 | Кількість ``` пар (код-блоки) | error | Ні |
-| 4 | Непарні ``` (незакриті блоки) | error | Ні |
-| 5 | Кількість Mermaid-блоків | error | Ні |
-| 6 | Кількість заголовків | warning | Ні |
-| 7 | Кількість рядків таблиць | warning | Ні |
-| 8 | Вміст код-блоків = оригінал | warning | Ні |
-| 9 | Якорні посилання резолвляться | error | Так (fix_anchors.py) |
-| 10 | URL збережені | warning | Ні |
-| 11 | Invisible Unicode символи | warning | Так (fix_anchors.py) |
-| 12 | Trailing newline | warning | Так (fix_anchors.py) |
+**Purpose**: Auto-fix common translation problems.
 
-**CLI**:
-```
-python scripts/validate.py --root /path/to/repo --lang uk
-python scripts/validate.py --root /path/to/repo --lang uk --translations-dir .
-python scripts/validate.py --root /path/to/repo --lang uk --file README.md
-python scripts/validate.py --root /path/to/repo --lang uk --json
-```
+**Fixes**:
+1. Broken anchor links → fuzzy match to correct anchor
+2. Mixed encoding (CP1251 blocks in UTF-8) → byte-level repair
+3. Invisible Unicode (U+200B, U+200C, U+200D, U+200E, U+200F) → remove
+4. Missing trailing newline → add
 
-**Логіка якорів** (heading_to_anchor):
-- Видаляє emoji
-- Видаляє пунктуацію КРІМ Unicode word chars, пробілів, дефісів
-- Lowercase
-- Пробіли → дефіси
-- Strip trailing дефіси
-- Підтримує дублюючі заголовки (додає -1, -2)
+**CLI**: `python scripts/fix_anchors.py PATH [--dry-run]`
 
-**ВАЖЛИВО**: Апострофи `'` (U+0027), `ʼ` (U+02BC), `'` (U+2019) обробляються по-різному. `'` видаляється (не word char), `ʼ` зберігається (word char). Це джерело багів — `find_best_anchor()` нормалізує апострофи при порівнянні.
+### prompt_generator.py
 
----
+**Purpose**: Generate ready-to-paste translation prompts.
 
-### 3. fix_anchors.py — Автовиправлення
+**Includes**: 11 translation rules, glossary terms, do-not-translate list, original file content.
 
-**Призначення**: Автоматично виправити проблеми знайдені validate.py.
+**Chunking**: Files > max_tokens split by `##` headings. Each chunk gets same rules and glossary.
 
-**Що виправляє**:
-1. Зламані якорні посилання → fuzzy match до правильного якоря
-2. Змішане кодування (CP1251 блоки в UTF-8 файлі) → перекодування
-3. Invisible Unicode символи → видалення
-4. Відсутній newline в кінці файлу → додавання
+**Glossary search** (priority): `--glossary` flag → `{dir}/.glossary-{lang}.yaml` → `translations/{lang}/.glossary.yaml`
 
-**CLI**:
-```
-python scripts/fix_anchors.py translations/uk/
-python scripts/fix_anchors.py translations/uk/README.md
-python scripts/fix_anchors.py --dry-run translations/uk/
-```
+**CLI**: `python scripts/prompt_generator.py FILE --lang CODE [--glossary FILE] [--chunk] [--max-tokens N] [--output FILE]`
 
-**Логіка виправлення якорів**:
-1. Збирає всі заголовки → генерує валідні якорі (з підтримкою дублікатів)
-2. Знаходить всі `[text](#anchor)` посилання ПОЗА код-блоками
-3. Якщо якір не в множині валідних → шукає найближчий через `normalize_anchor()` (видаляє апострофи) та substring match
-4. Замінює в зворотному порядку (щоб не зсунути позиції)
+### sync_check.py
 
-**Логіка виправлення кодування**:
-1. Читає файл як байти
-2. Проходить побайтово, перевіряє валідність UTF-8
-3. Невалідні байти — пробує декодувати як CP1251 → перекодувати в UTF-8
+**Purpose**: Detect outdated translations.
 
----
+**Logic**: Reads `<!-- i18n-source-sha: ... -->` from translated files, compares with current `git log` SHA. Different SHA = outdated.
 
-### 4. prompt_generator.py — Генерація промптів
+**Auto-detection**: Excludes language code directories and translation container directories from "not yet translated" list.
 
-**Призначення**: Створити готовий промпт для copy-paste в Claude.ai / ChatGPT.
+**CLI**: `python scripts/sync_check.py --root PATH --lang CODE [--translations-dir NAME] [--json]`
 
-**CLI**:
-```
-python scripts/prompt_generator.py README.md --lang uk
-python scripts/prompt_generator.py README.md --lang uk --glossary examples/glossary-uk.yaml
-python scripts/prompt_generator.py big-file.md --lang uk --chunk --max-tokens 4000
-python scripts/prompt_generator.py README.md --lang uk --output prompt.txt
-```
+## Key Design Decisions
 
-**Промпт включає**:
-- 11 правил перекладу (не чіпати код, Mermaid, URL тощо)
-- Глосарій (якщо є)
-- Список "не перекладати" (якщо є)
-- Оригінальний текст файлу
+| Decision | Choice | Why |
+|----------|--------|-----|
+| Output directory | `translations/{lang}/` | Clear to everyone, unlike `i18n/` |
+| What to copy | Only .md files | Code/images stay in original location |
+| API dependency | None required | Core value is validation, not translation |
+| Config file | Optional | Works with sensible defaults |
+| Language codes | ISO 639-1 | Industry standard |
+| Exclude detection | Automatic | Scans for existing translation dirs |
 
-**Чанкування**: Якщо файл > max_tokens — розбиває по `##` заголовках. Кожен чанк отримує ті ж правила та глосарій.
+## Translation Rules (for AI prompts)
 
-**Пошук глосарію** (пріоритет):
-1. `--glossary` параметр
-2. `{file_dir}/.glossary-{lang}.yaml`
-3. `translations/{lang}/.glossary.yaml`
-4. `.repo-translator-glossary-{lang}.yaml`
+1. Code blocks (``` and ~~~~) — DO NOT translate or modify
+2. Mermaid diagrams — DO NOT modify
+3. URLs and file paths — DO NOT change
+4. YAML frontmatter — translate only `description` field
+5. HTML tags — translate text between tags, NOT attributes
+6. Preserve Markdown formatting 1:1
+7. Line count of translation ±5% of original
+8. DO NOT add translator notes or comments
+9. DO NOT shorten or summarize — translate EVERYTHING
 
----
-
-### 5. sync_check.py — Перевірка синхронізації
-
-**Призначення**: Визначити які переклади застаріли після оновлення оригіналу.
-
-**CLI**:
-```
-python scripts/sync_check.py --root /path/to/repo --lang uk
-python scripts/sync_check.py --root /path/to/repo --lang uk --translations-dir .
-python scripts/sync_check.py --root /path/to/repo --lang uk --json
-```
-
-**Логіка**:
-1. Для кожного файлу в translations/{lang}/ — знайти відповідний оригінал
-2. Прочитати `<!-- i18n-source-sha: ... -->` з метаданих перекладу
-3. Отримати поточний SHA оригіналу через `git log`
-4. Якщо SHA різні → файл застарів
-5. Показати diff stats
-
-**Fallback без git**: Якщо репо не git — пропускає sync (попередження).
-
-**i18n метадані** (на початку перекладеного файлу):
-```html
-<!-- i18n-source: README.md -->
-<!-- i18n-source-sha: a1b2c3d -->
-<!-- i18n-date: 2026-04-10 -->
-```
-
----
-
-## Ключові рішення та правила
-
-### Структура перекладів
-
-**Стандарт**: `translations/{lang}/` — дзеркало структури оригіналу, тільки перекладені .md файли.
+## Commit Conventions
 
 ```
-repo/
-├── README.md              ← оригінал
-├── docs/guide.md
-└── translations/
-    └── uk/
-        ├── README.md      ← переклад
-        └── docs/guide.md  ← переклад
+type(scope): description
 ```
 
-**Чому `translations/`**: Зрозуміло кожному без пояснень (на відміну від `i18n/`).
+Types: `feat`, `fix`, `docs`, `refactor`, `test`, `chore`
 
-**Не копіювати код/зображення**: Тільки .md файли. Посилання на не-.md ресурси переписуються на оригінал.
-
-### Автодетекція існуючих перекладів
-
-Сканер автоматично знаходить і виключає:
-- Папки з кодами ISO 639-1 в корені (`uk/`, `vi/`, `zh/` тощо) — якщо містять .md файли
-- Контейнерні папки (`translations/`, `i18n/`, `l10n/`, `lang/`, `locales/`)
-
-### Мови
-
-ISO 639-1 коди. 35 мов в `LANGUAGES` dict. Невідомий код → попередження, але працює.
-
-### Переклад — правила для AI
-
-1. Код-блоки (``` та ~~~~) — НЕ перекладати, НЕ модифікувати
-2. Mermaid-діаграми — НЕ модифікувати
-3. URL та шляхи файлів — НЕ змінювати
-4. YAML frontmatter — перекладати тільки `description`, решту залишити
-5. HTML-теги — перекладати текст між тегами, НЕ чіпати атрибути
-6. Зберігати Markdown-форматування 1:1
-7. Кількість рядків перекладу ±5% від оригіналу
-8. НЕ додавати пояснень/коментарів від перекладача
-9. НЕ скорочувати — перекладати ВСЕ
-
----
-
-## Відомі проблеми (TODO)
-
-### Баги
-
-1. **Path.match() на Windows**: `Path.match("uk/**")` не завжди матчить глибоко вкладені файли на старих Python. Workaround: fallback через `str.startswith()`.
-
-2. **Глосарій-перевірка**: `check_glossary()` в validate.py — заглушка (не реалізовано). Потрібен NLP-based matching.
-
-### Не реалізовано (MVP scope)
-
-- [ ] Автоматичний переклад через API (Anthropic/OpenAI/Ollama)
-- [ ] Переписування відносних посилань при створенні перекладу
-- [ ] GitHub Action для автоматичного sync-check
-- [ ] init команда (wizard для першого налаштування)
-- [ ] Підтримка RTL мов
-- [ ] Коефіцієнти перевірки рядків залежно від мови (CJK коротші)
-- [ ] Translation memory (не перекладати повторно)
-- [ ] Batch-режим для великих PR
-
----
-
-## Тестування
-
-### Тест на claude-howto (реальний репо, 22K+ ⭐)
-
-```powershell
-cd D:\Github\claude-howto
-
-# Сканування (auto-detect uk/, vi/, zh/)
-python D:\Github\repo-translator\scripts\scan.py --root . --lang uk
-
-# Валідація існуючого перекладу
-python D:\Github\repo-translator\scripts\validate.py --root . --lang uk --translations-dir .
-
-# Синхронізація
-python D:\Github\repo-translator\scripts\sync_check.py --root . --lang uk --translations-dir .
-
-# Промпт для перекладу
-python D:\Github\repo-translator\scripts\prompt_generator.py README.md --lang uk
+Examples:
+```
+feat(scan): add auto-detection of existing translations
+fix(validate): handle apostrophe variants in anchors
+docs(readme): add badges and quick start section
 ```
 
-### Тест на будь-якому іншому репо
+## Known Issues
 
-```powershell
-git clone https://github.com/someone/any-repo.git
-cd any-repo
-python D:\Github\repo-translator\scripts\scan.py --root . --lang de
-```
+1. **Glossary checking**: `check_glossary()` in validate.py is a stub (not implemented)
+2. **Code block placeholder extraction**: Not yet implemented — AI still sees code blocks
+3. **Relative link rewriting**: Not automated when creating translations
+4. **RTL language support**: Not tested
+5. **CJK line count coefficients**: Not implemented (CJK text is shorter)
 
----
+## Testing
 
-## Контекст створення
+Tested on two real repositories:
 
-Проєкт створено на основі реального досвіду перекладу [luongnv89/claude-howto](https://github.com/luongnv89/claude-howto) (22K+ ⭐) українською мовою. PR #64. Кожна функція та перевірка — відповідь на реальну проблему:
-
-- AI скоротив файли на 58% → перевірка кількості рядків
-- AI переклав код-блоки → плейсхолдери (TODO)
-- Якорі зламались після перекладу → auto-fix
-- CP1251 кодування від Claude Code → encoding detection
-- Непослідовна термінологія → глосарій
-
-Детальний аналіз 48 проблем: `FAILURE-ANALYSIS.md`
-Повна специфікація: `REPO-TRANSLATOR-SPEC.md`
+| Repo | Stars | Files | Result |
+|------|-------|-------|--------|
+| luongnv89/claude-howto | 22K+ | 103 | ✅ scan, validate (4 real errors found), sync |
+| AgriciDaniel/claude-seo | new | 101 | ✅ scan, prompt generation, chunking |

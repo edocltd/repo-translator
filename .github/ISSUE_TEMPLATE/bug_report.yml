@@ -1,0 +1,50 @@
+name: Bug Report
+description: Report a bug or unexpected behavior
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: input
+    id: script
+    attributes:
+      label: Script
+      description: Which script had the issue?
+      placeholder: "scan.py / validate.py / fix_anchors.py / prompt_generator.py / sync_check.py"
+    validations:
+      required: true
+  - type: input
+    id: command
+    attributes:
+      label: Command that failed
+      description: Exact command you ran
+      placeholder: "python scripts/scan.py --root /path/to/repo --lang uk"
+    validations:
+      required: true
+  - type: textarea
+    id: error-output
+    attributes:
+      label: Full error output
+      description: Copy the complete terminal output
+      render: shell
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What did you expect to happen?
+    validations:
+      required: true
+  - type: input
+    id: os
+    attributes:
+      label: OS / Python version
+      description: "e.g. Windows 11, Python 3.12"
+    validations:
+      required: true
+  - type: input
+    id: repo
+    attributes:
+      label: Repository tested on
+      description: Link to the repo you were translating (if public)
+    validations:
+      required: false
