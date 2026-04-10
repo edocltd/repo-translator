@@ -13,7 +13,7 @@
 
 Kein API-Wrapper — ein **Framework** für Struktur, Validierung und Synchronisation. Übersetzen Sie mit jeder Methode: Claude Code, Claude.ai, ChatGPT, Ollama oder manuell. Das Tool stellt sicher, dass das Ergebnis korrekt ist.
 
-> **Aus echter Erfahrung gebaut**: Jede Funktion existiert wegen eines echten Problems bei der Übersetzung von [claude-howto](https://github.com/luongnv89/claude-howto) (22K+ ⭐) ins Ukrainische. Siehe [FAILURE-ANALYSIS.md](../../docs/failure-analysis.md) für die vollständige Analyse von 48 Problemen.
+> **Aus echter Erfahrung gebaut**: Jede Funktion existiert wegen eines echten Problems bei der Übersetzung von [claude-howto](https://github.com/luongnv89/claude-howto) (22K+ ⭐) ins Ukrainische. Siehe [FAILURE-ANALYSIS.md](docs/failure-analysis.md) für die vollständige Analyse von 48 Problemen.
 
 ---
 

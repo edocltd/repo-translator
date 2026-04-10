@@ -13,7 +13,7 @@
 
 APIラッパーではなく、構造化、検証、同期のための**フレームワーク**です。Claude Code、Claude.ai、ChatGPT、Ollama、または手動で翻訳できます。ツールは結果の正確性を保証します。
 
-> **実体験から構築**: すべての機能は、[claude-howto](https://github.com/luongnv89/claude-howto)（22K+ ⭐）をウクライナ語に翻訳する際に遭遇した実際の問題から生まれました。48の問題の完全な分析は [FAILURE-ANALYSIS.md](../../docs/failure-analysis.md) をご覧ください。
+> **実体験から構築**: すべての機能は、[claude-howto](https://github.com/luongnv89/claude-howto)（22K+ ⭐）をウクライナ語に翻訳する際に遭遇した実際の問題から生まれました。48の問題の完全な分析は [FAILURE-ANALYSIS.md](docs/failure-analysis.md) をご覧ください。
 
 ---
 

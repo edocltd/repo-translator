@@ -13,7 +13,7 @@
 
 不是 API 封装器——而是用于结构化、验证和同步的**框架**。使用任何方法翻译：Claude Code、Claude.ai、ChatGPT、Ollama 或手动翻译。工具确保结果正确。
 
-> **基于真实经验构建**：每个功能都源于翻译 [claude-howto](https://github.com/luongnv89/claude-howto)（22K+ ⭐）为乌克兰语时遇到的真实问题。详见 [FAILURE-ANALYSIS.md](../../docs/failure-analysis.md) 中 48 个问题的完整分析。
+> **基于真实经验构建**：每个功能都源于翻译 [claude-howto](https://github.com/luongnv89/claude-howto)（22K+ ⭐）为乌克兰语时遇到的真实问题。详见 [FAILURE-ANALYSIS.md](docs/failure-analysis.md) 中 48 个问题的完整分析。
 
 ---
 

@@ -13,7 +13,7 @@
 
 Pas un wrapper d'API — un **framework** pour la structure, la validation et la synchronisation. Traduisez avec n'importe quelle méthode : Claude Code, Claude.ai, ChatGPT, Ollama ou manuellement. L'outil garantit que le résultat est correct.
 
-> **Construit à partir d'expérience réelle** : Chaque fonctionnalité existe à cause d'un problème réel rencontré lors de la traduction de [claude-howto](https://github.com/luongnv89/claude-howto) (22K+ ⭐) en ukrainien. Voir [FAILURE-ANALYSIS.md](../../docs/failure-analysis.md) pour l'analyse complète des 48 problèmes.
+> **Construit à partir d'expérience réelle** : Chaque fonctionnalité existe à cause d'un problème réel rencontré lors de la traduction de [claude-howto](https://github.com/luongnv89/claude-howto) (22K+ ⭐) en ukrainien. Voir [FAILURE-ANALYSIS.md](docs/failure-analysis.md) pour l'analyse complète des 48 problèmes.
 
 ---
 
