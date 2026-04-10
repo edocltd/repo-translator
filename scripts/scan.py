@@ -137,6 +137,67 @@ def matches_pattern(path: Path, patterns: list[str], root: Path) -> bool:
                 return True
     return False
 
+# Known translation directory names
+TRANSLATION_DIR_NAMES = {"translations", "i18n", "l10n", "lang", "locales"}
+
+
+def detect_existing_translations(root: Path) -> list[dict]:
+    """Auto-detect existing translation directories anywhere in the repo."""
+    found = []
+
+    # Check root-level directories matching language codes
+    for item in root.iterdir():
+        if not item.is_dir():
+            continue
+        name = item.name.lower()
+
+        # Known translation container dirs (translations/, i18n/, etc.)
+        if name in TRANSLATION_DIR_NAMES:
+            langs_inside = [
+                d.name for d in item.iterdir()
+                if d.is_dir() and d.name.lower() in LANGUAGES
+            ]
+            found.append({
+                "path": str(item.relative_to(root)),
+                "type": "container",
+                "languages": langs_inside,
+            })
+
+        # Direct language code dirs (uk/, vi/, zh/, etc.)
+        elif name in LANGUAGES:
+            # Verify it has .md files (not just a random dir named "no" or "is")
+            md_count = sum(1 for _ in item.rglob("*.md"))
+            if md_count > 0:
+                found.append({
+                    "path": name,
+                    "type": "language_dir",
+                    "language": LANGUAGES.get(name, name),
+                    "files": md_count,
+                })
+
+    return found
+
+
+def build_exclude_patterns(root: Path, base_exclude: list[str]) -> tuple[list[str], list[dict]]:
+    """Build exclude patterns, auto-detecting translation directories."""
+    exclude = list(base_exclude)
+    detected = detect_existing_translations(root)
+
+    for d in detected:
+        pattern = d["path"] + "/**"
+        if pattern not in exclude:
+            exclude.append(pattern)
+
+    # Always exclude standard translation dirs even if not detected yet
+    for dirname in TRANSLATION_DIR_NAMES:
+        pattern = f"{dirname}/**"
+        if pattern not in exclude:
+            dir_path = root / dirname
+            if dir_path.is_dir():
+                exclude.append(pattern)
+
+    return exclude, detected
+
 
 def scan_repo(
     root: Path,
@@ -161,8 +222,8 @@ def scan_repo(
 
     root = root.resolve()
 
-    # Add translations dir to exclude
-    exclude_with_translations = list(exclude) + [f"{translations_dir}/**"]
+    # Auto-detect and exclude all existing translation directories
+    exclude_with_translations, detected_translations = build_exclude_patterns(root, exclude)
 
     files = []
     skipped_reasons = {}
@@ -185,7 +246,19 @@ def scan_repo(
             except ValueError:
                 continue
 
-            if any(rel.match(p) for p in exclude_with_translations):
+            # Check exclude patterns
+            rel_str = str(rel).replace("\\", "/")
+            excluded = False
+            for p in exclude_with_translations:
+                if rel.match(p):
+                    excluded = True
+                    break
+                # Fallback: check if path starts with exclude prefix (for ** patterns)
+                prefix = p.replace("/**", "").replace("**", "")
+                if prefix and rel_str.startswith(prefix + "/"):
+                    excluded = True
+                    break
+            if excluded:
                 skipped_reasons[str(rel)] = "excluded by pattern"
                 continue
 
@@ -263,6 +336,7 @@ def scan_repo(
         "target_lang": lang,
         "target_lang_name": lang_name,
         "translations_dir": f"{translations_dir}/{lang}",
+        "detected_translations": detected_translations,
         "files": files,
         "skipped": skipped_reasons,
         "stats": {
@@ -294,6 +368,18 @@ def print_plan(plan: dict) -> None:
     print(f"  Target dir:   {plan['translations_dir']}/")
     print(f"  Source:        {plan['source_repo']}")
     print(f"{'='*60}\n")
+
+    # Show detected existing translations
+    detected = plan.get("detected_translations", [])
+    if detected:
+        print(f"  🔍 Detected existing translations (auto-excluded):")
+        for d in detected:
+            if d["type"] == "language_dir":
+                print(f"     {d['path']}/  ({d['language']}, {d['files']} files)")
+            elif d["type"] == "container":
+                langs = ", ".join(d["languages"]) if d["languages"] else "empty"
+                print(f"     {d['path']}/  (container: {langs})")
+        print()
 
     print(f"  📊 Summary:")
     print(f"     To translate: {stats['to_translate']} files")
